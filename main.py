@@ -6,7 +6,7 @@ import random
 
 class Puzzle:
   def __init__(self, password, clues):
-    self.password = passwordgit
+    self.password = password
     self.clues = clues
 
 
