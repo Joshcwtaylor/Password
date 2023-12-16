@@ -1,11 +1,12 @@
 # Password Plus?
+# Super Password?
 
 import random
 
 
 class Puzzle:
   def __init__(self, password, clues):
-    self.password = password
+    self.password = passwordgit
     self.clues = clues
 
 
