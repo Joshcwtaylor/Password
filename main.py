@@ -7,9 +7,13 @@ class SimpleScene:
 
     FONT = None
 
-    def __init__(self, next_scene, *text):
+    def __init__(self, next_scene, background_image_path, *text):
         self.background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.background.fill(pygame.Color('lightgrey'))
+        #self.background.fill(pygame.Color('lightgrey'))
+
+        # load set graphic and blit to copy content from one surface to other
+        set_image = pygame.image.load(os.path.join('assets', background_image_path)).convert()
+        self.background.blit(set_image, (0, 0))
 
         y = 80
         if text:
@@ -70,9 +74,13 @@ class GameState:
 
 class SettingScene:
 
-    def __init__(self):
+    def __init__(self, background_image_path):
         self.background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.background.fill(pygame.Color('lightgrey'))
+        #self.background.fill(pygame.Color('lightgrey'))
+
+        # load set graphic and blit to copy content from one surface to other
+        set_image = pygame.image.load(os.path.join('assets', background_image_path)).convert()
+        self.background.blit(set_image, (0, 0))
 
         if SimpleScene.FONT == None:
             SimpleScene.FONT = pygame.freetype.SysFont(None, 32)
@@ -112,7 +120,12 @@ class SettingScene:
                     n += 1
 
 class GameScene:
-    def __init__(self):
+    def __init__(self, background_image_path):
+        self.background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        # load set graphic and blit to copy content from one surface to other
+        self.set_image = pygame.image.load(os.path.join('assets', background_image_path)).convert()
+        self.background.blit(self.set_image, (0, 0))
+
         if SimpleScene.FONT == None:
             SimpleScene.FONT = pygame.freetype.SysFont(None, 32)
 
@@ -126,14 +139,7 @@ class GameScene:
 
     def start(self, gamestate):
         self.background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.background.fill(pygame.Color('lightgrey'))
-        
-        # load set graphic
-        set_image = pygame.image.load(os.path.join('assets', 'Set.png')).convert()
-        
-        # Using blit to copy content from one surface to other
-        self.background.blit(set_image, (0, 0))
-
+        self.background.blit(self.set_image, (0, 0))
 
         self.gamestate = gamestate
         question, answer = gamestate.pop_question()
@@ -183,10 +189,10 @@ def main():
     clock = pygame.time.Clock()
     dt = 0
     scenes = {
-        'TITLE':    SimpleScene('SETTING', 'Welcome to ' + APPLICATION_NAME, '', '', '', 'press [SPACE] to start'),
-        'SETTING':  SettingScene(),
-        'GAME':     GameScene(),
-        'RESULT':   SimpleScene('TITLE', 'Here is your result:'),
+        'TITLE':    SimpleScene('SETTING', 'Menu.png', 'Welcome to ' + APPLICATION_NAME, '', '', '', 'press [SPACE] to start'),
+        'SETTING':  SettingScene('Menu.png'),
+        'GAME':     GameScene('Set.png'),
+        'RESULT':   SimpleScene('TITLE', 'Menu.png', 'Final Score:'),
     }
     scene = scenes['TITLE']
     while True:
