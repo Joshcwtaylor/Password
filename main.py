@@ -1,5 +1,6 @@
 import pygame
 import pygame.freetype
+from pygame import mixer
 import random
 import os
 
@@ -66,8 +67,10 @@ class GameState:
     def answer(self, answer):
         if answer == self.current_question[1]:
             self.right += 1
+            play_sound("correct.aiff")
         else:
             self.wrong += 1
+            play_sound("incorrect.aiff")
 
     def get_result(self):
         return f'{self.right} answers correct', f'{self.wrong} answers wrong', '', 'Good!' if self.right > self.wrong else 'You can do better!'
@@ -184,6 +187,12 @@ def main():
     logo = pygame.image.load(os.path.join('assets', 'Logo32x32.png'))
     pygame.display.set_icon(logo)
     pygame.display.set_caption(APPLICATION_NAME)
+
+    # Play the them mustic: Starting the mixer, load the song, set the volume, then play
+    mixer.init() 
+    mixer.music.load(os.path.join('audio', 'Password Plus.mp3')) 
+    mixer.music.set_volume(0.7) 
+    mixer.music.play() 
   
 
     clock = pygame.time.Clock()
@@ -199,6 +208,8 @@ def main():
         events = pygame.event.get()
         for e in events:
             if e.type == pygame.QUIT:
+                # Stop the music
+                mixer.music.stop()
                 return
 
         result = scene.update(events, dt)
@@ -212,6 +223,13 @@ def main():
 
         pygame.display.flip()
         dt = clock.tick(60)
+
+def play_sound(filename):
+     # Play the them mustic: Starting the mixer, load the song, set the volume, then play
+    mixer.init() 
+    mixer.music.load(os.path.join('audio', filename)) 
+    mixer.music.set_volume(0.7) 
+    mixer.music.play()
 
 if __name__ == '__main__':
     main()
