@@ -2,6 +2,8 @@
 # Super Password?
 
 import random
+from collections import Counter
+
 
 
 class Puzzle:
@@ -66,8 +68,25 @@ def playPuzzle(puzzle):
         print("The correct password was: " + answer)
 
 
+def high_scores():
+    with open("Log", "r") as f:
+        score = f.read()
+        print(score)
+
+
+
 def main():
-    print("It's more than Password...it's Password Plus!")
+    # Asking if the player would want to play or see the High Scores
+    while True:
+        print("It's more than Password...it's Password Plus!")
+        start_game = input("Press 1 to play, Press 2 to see the high scores!")
+        if start_game == "1":
+            break
+        elif start_game == "2":
+            high_scores()
+        else:
+            print("Please select 1, or 2")
+
 
     Player.name = input("What is your Player Name? ")
 
