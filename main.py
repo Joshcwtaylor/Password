@@ -5,8 +5,6 @@ import os
 import random
 import json
 from types import SimpleNamespace
-from collections import Counter
-
 
 
 class Puzzle:
@@ -32,6 +30,8 @@ puzzles = [
             , Puzzle("family guy",["Tv Show", "Cartoon", "Rhode Island", "Talking baby"])
             , Puzzle("golden girls",["Blanche", "Rose", "Dorothy", "Sophia"])
             , Puzzle("butter",["churn", "milk", "cream", "yellow"])
+            , Puzzle("grape",["bunch", "purple", "wine", "fruit"])
+            , Puzzle("toaster",["bread", "pop", "brown", "cooked"])
             ]
 
 # Create an instance of the Player class (it will be accessible globally)
@@ -60,7 +60,7 @@ def playPuzzle(puzzle):
 
         guessed_answer = input("What is your " + variable_wording[clue_number] + " guess? ")
         if guessed_answer.lower() == answer:
-            print("You have guessed the right answer!")
+            print(f"You have guessed the right answer! You earned {point_values[clue_number]} points.")
             guessed_correctly = True
             current_player.score += point_values[clue_number]
             break
@@ -92,7 +92,7 @@ def append_save_data(player_to_save, file_path):
     data_as_json = to_json(player_to_save)
 
     with open(file_path, 'a') as out:
-        out.write(data_as_json + '\r\n')
+        out.write(data_as_json + '\n')
     
     print("Data saved to file: " + file_path)
 
@@ -102,13 +102,13 @@ def clear_file_data(file_path):
 
 def get_all_player_data(log_path):
     data_from_file = []
-    with open(log_path, "r") as f:
-        read_line = f.read()
-        if read_line != '':
-            line_as_json = json.loads(read_line, object_hook=lambda d: SimpleNamespace(**d))
-            #print(line_as_json)
-            data_from_file.append(line_as_json)
-    
+            
+    with open(log_path, 'r', encoding='UTF-8') as f:
+        while line := f.readline():
+            if line != '':
+                line_as_json = json.loads(line, object_hook=lambda d: SimpleNamespace(**d))
+                data_from_file.append(line_as_json)
+
     return data_from_file
 
 def remove_previously_saved_data(player_name, log_path):
@@ -117,12 +117,12 @@ def remove_previously_saved_data(player_name, log_path):
     # Find the first record with a matching player name
     line_to_delete = -1
     for number, p in enumerate(all_players):
-        if p.name == player_name:
+        if p.name == player_name.name:
             line_to_delete = number
 
     # Remove the player's data, clear the file, and resave the file with players re-added
     if line_to_delete > -1:
-        all_players.remove(line_to_delete)
+        all_players.pop(line_to_delete)
 
         clear_file_data(log_path)
 
@@ -134,7 +134,7 @@ def select_player_from_file(player_list):
     x = 1
     print("===== Players =====")
     for p in player_list:
-        print(f'{x}. {p.name}')
+        print(f'{x}. {p.name} - {p.score}')
         x = x + 1 
     
     x = x - 1
@@ -154,6 +154,18 @@ def select_player_from_file(player_list):
     
     return player_list[selected_player_index - 1]
 
+
+def display_high_scores_from_file(player_list):
+    x = 1
+
+    # Sort the list by Score
+    sorted_list = sorted(player_list, key=lambda x: x.score, reverse=True)
+
+    print("===== High Scores =====")
+    for p in sorted_list:
+        print(f'{x}. {p.name} - {p.score}')
+        x = x + 1 
+
 def main():
      # Change the working directory to the place where this .py file is located so that relative paths will work
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -170,14 +182,23 @@ def main():
     print("It's more than Password...it's Password Plus!")
 
     # Asking if the player would want to play or see the High Scores
+    display_menu = True
     start_game = 0
-    while start_game != 1:
+    while display_menu:
         
-        start_game = input("Press 1 to play, Press 2 to see the high scores, Press 3 to load data from file ")
+        start_game = input("Select an Option:\r\n1) Play Password Plus\r\n2) View high scores\r\n3) Load saved player data\r\n4) Quit\r\n")
         if start_game == "1":
+            display_menu = False
             break
         elif start_game == "2":
-            high_scores()
+            player_data_from_file = get_all_player_data(scores_log_path)
+
+            if len(player_data_from_file) > 0:
+                display_high_scores_from_file(player_data_from_file)
+            else:
+                print("No previous save data found")
+            
+            #high_scores()
         elif start_game == "3":
             player_data_from_file = get_all_player_data(scores_log_path)
 
@@ -185,39 +206,45 @@ def main():
                 current_player = select_player_from_file(player_data_from_file)
             else:
                 print("No previous save data found")
+        elif start_game == "4":
+            display_menu = False
+            break
         else:
-            print("Please select 1, or 2")
+            print("Please select a valid option.")
 
-    # If a player's data was not loaded from file, ask for their name
-    if current_player.name != "no name":
-        print(f"Player loaded from file: {current_player.name}")
+    if start_game == "1":
+        # If a player's data was not loaded from file, ask for their name
+        if current_player.name != "no name":
+            print(f"Player loaded from file: {current_player.name}")
+        else:
+            current_player.name = input("What is your Player Name? ")
+
+
+        passwords_to_play = input("How many passwords do you want to play? (1 to " + str(len(puzzles)) + ") ")
+
+        # Play
+        for current_password_number in range(int(passwords_to_play)):
+            print("===== Password #" + str(current_password_number + 1) + "=====")
+            selected_puzzle = random.choice(puzzles)
+            puzzles.remove(selected_puzzle)
+
+            # Call the playPuzzle function which contains the logic for giving clues and checking guesses
+            playPuzzle(selected_puzzle)
+        
+        print("====================")
+
+        save_data(current_player, scores_log_path)
+
+        print("Thanks for playing", current_player.name + "!")
+        print("Your score was", current_player.score)
+
+        # Created a log to store username and player scores
+        #log_information = current_player.name, current_player.score
+        #file = open('Log', 'a')
+        #file.write(str(log_information))
+        #file.close()
     else:
-        current_player.name = input("What is your Player Name? ")
-
-
-    passwords_to_play = input("How many passwords do you want to play? (1 to " + str(len(puzzles)) + ") ")
-
-    # Play
-    for current_password_number in range(int(passwords_to_play)):
-        print("===== Password #" + str(current_password_number + 1) + "=====")
-        selected_puzzle = random.choice(puzzles)
-        puzzles.remove(selected_puzzle)
-
-        # Call the playPuzzle function which contains the logic for giving clues and checking guesses
-        playPuzzle(selected_puzzle)
-    
-    print("====================")
-
-    save_data(current_player, scores_log_path)
-
-    print("Thanks for playing", current_player.name + "!")
-    print("Your score was", current_player.score)
-
-    # Created a log to store username and player scores
-    #log_information = current_player.name, current_player.score
-    #file = open('Log', 'a')
-    #file.write(str(log_information))
-    #file.close()
+        print("See ya!")
 
 
 main()
